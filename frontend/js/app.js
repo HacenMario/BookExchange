@@ -2250,19 +2250,26 @@ function saveNotifications(notifs) {
 
 function addNotification(title, message, type = 'info', link = null) {
     const notifs = loadNotifications();
-    const newNotif = {
-        id: Date.now(),
-        title,
-        message,
-        type,
-        link,
-        read: false,
-        timestamp: new Date().toISOString()
-    };
+    const newNotif = { id: Date.now(), title, message, type, link, read: false, timestamp: new Date().toISOString() };
     notifs.unshift(newNotif);
     if (notifs.length > 50) notifs.pop();
     saveNotifications(notifs);
     updateNotificationUI();
+
+    // ============================================================
+    // تحديث البادج مباشرة (ضمان)
+    // ============================================================
+    const badge = document.getElementById('notifBadge');
+    if (badge) {
+        const unread = notifs.filter(n => !n.read).length;
+        if (unread > 0) {
+            badge.style.display = 'inline-block';
+            badge.textContent = unread > 99 ? '99+' : unread;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
     showToast(`🔔 ${title}`, 'info');
 }
 function updateNotificationUI() {
