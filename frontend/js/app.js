@@ -302,7 +302,7 @@ function initSocket() {
         });
 
         socket.on('trade-notification', (data) => {
-            console.log('🔔 إشعار تبادل:', data);
+            console.log('🔔 استقبلت إشعار:', data); // للتصحيح
             addNotification(data.title, data.message, 'trade', data.link || '/trades');
         });
 
