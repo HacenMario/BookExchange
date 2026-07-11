@@ -105,7 +105,7 @@ app.get('/', (req, res) => {
 // ============================================================
 // 7. الاتصال بقاعدة البيانات
 // ============================================================
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/book_exchange')
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/BookExchange')
     .then(() => console.log('✅ تم الاتصال بقاعدة البيانات (Book Exchange)'))
     .catch(err => {
         console.error('❌ فشل الاتصال بقاعدة البيانات:', err);
