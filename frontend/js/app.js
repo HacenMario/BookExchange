@@ -1002,7 +1002,7 @@ async function editBook(bookId) {
         if (!res.ok) throw new Error('فشل في جلب بيانات الكتاب');
         const book = await res.json();
 
-        // معالجة الوسوم
+        // معالجة الوسوم لعرضها في الحقل
         let tagsValue = '';
         if (book.tags) {
             if (Array.isArray(book.tags)) {
@@ -1012,37 +1012,75 @@ async function editBook(bookId) {
             }
         }
 
-        // إنشاء نافذة التعديل
+        // ============================================================
+        // إنشاء النافذة المنبثقة – تأكد من استخدام backticks (``)
+        // ============================================================
         const modal = document.createElement('div');
         modal.className = 'modal-overlay active';
         modal.id = 'editBookModal';
-    modal.innerHTML = `
-        <div class="modal-box" style="max-width:600px;">
-            <button class="modal-close" onclick="closeModal('editBookModal')">&times;</button>
-            <h2><i class="fas fa-edit"></i> تعديل الكتاب</h2>
-            <form id="editBookForm">
-                <!-- باقي الحقول -->
-                
-                <div class="form-group">
-                    <label>صورة الغلاف (اختياري)</label>
-                    <input type="file" id="editCoverImage" accept="image/*">
-                    ${book.coverImage ? `<div style="margin-top:0.3rem;"><img src="${book.coverImage}" style="max-width:100px;max-height:100px;border-radius:8px;border:1px solid #ddd;"></div>` : ''}
-                    <div style="font-size:0.7rem;color:#888;margin-top:0.2rem;">اتركه فارغاً للاحتفاظ بالصورة الحالية</div>
-                </div>
-                
-                <div style="display:flex;gap:0.5rem;margin-top:1rem;">
-                    <button type="submit" class="btn-gold" style="flex:1;padding:0.5rem;">
-                        <i class="fas fa-save"></i> حفظ التغييرات
-                    </button>
-                    <button type="button" class="btn-outline" onclick="closeModal('editBookModal')" style="flex:1;padding:0.5rem;">
-                        إلغاء
-                    </button>
-                </div>
-            </form>
-        </div>
-    `;  // <-- يجب أن ينتهي بـ backtick (`) وليس بعلامة تنصيص
-    
-    document.body.appendChild(modal);
+        modal.innerHTML = `
+            <div class="modal-box" style="max-width:600px;">
+                <button class="modal-close" onclick="closeModal('editBookModal')">&times;</button>
+                <h2><i class="fas fa-edit"></i> تعديل الكتاب</h2>
+                <form id="editBookForm">
+                    <div class="form-group">
+                        <label>العنوان *</label>
+                        <input type="text" id="editTitle" value="${book.title}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>المؤلف *</label>
+                        <input type="text" id="editAuthor" value="${book.author}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>الوصف</label>
+                        <textarea id="editDescription" rows="3">${book.description || ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>التصنيف *</label>
+                        <select id="editCategory" required>
+                            ${['رواية', 'علمي', 'ديني', 'تنمية بشرية', 'تاريخي', 'سياسي', 'أدب', 'شعر', 'فلسفة', 'أطفال', 'أخرى'].map(cat =>
+                                `<option value="${cat}" ${book.category === cat ? 'selected' : ''}>${cat}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>حالة الكتاب *</label>
+                        <select id="editCondition" required>
+                            ${['جديد', 'ممتاز', 'جيد جداً', 'جيد', 'مقبول'].map(cond =>
+                                `<option value="${cond}" ${book.condition === cond ? 'selected' : ''}>${cond}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>الموقع</label>
+                        <input type="text" id="editLocation" value="${book.location || ''}">
+                    </div>
+                    <div class="form-group">
+                        <label>الوسوم (مفصولة بفواصل)</label>
+                        <input type="text" id="editTags" value="${tagsValue}">
+                    </div>
+                    <div class="form-group">
+                        <label>مقتطف من الكتاب (اختياري)</label>
+                        <textarea id="editExcerpt" rows="2">${book.excerpt || ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>صورة الغلاف (اختياري)</label>
+                        <input type="file" id="editCoverImage" accept="image/*">
+                        ${book.coverImage ? `<div style="margin-top:0.3rem;"><img src="${book.coverImage}" style="max-width:100px;max-height:100px;border-radius:8px;border:1px solid #ddd;"></div>` : ''}
+                        <div style="font-size:0.7rem;color:#888;margin-top:0.2rem;">اتركه فارغاً للاحتفاظ بالصورة الحالية</div>
+                    </div>
+                    <div style="display:flex;gap:0.5rem;margin-top:1rem;">
+                        <button type="submit" class="btn-gold" style="flex:1;padding:0.5rem;">
+                            <i class="fas fa-save"></i> حفظ التغييرات
+                        </button>
+                        <button type="button" class="btn-outline" onclick="closeModal('editBookModal')" style="flex:1;padding:0.5rem;">
+                            إلغاء
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
 
         // معالجة تقديم النموذج
         document.getElementById('editBookForm').addEventListener('submit', async (e) => {
