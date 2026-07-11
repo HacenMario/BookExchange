@@ -244,13 +244,20 @@ function logout() {
 function initSocket() {
     if (socket) return;
     try {
-        let userId = currentUser?._id || currentUser?.id || null;
+        let userId = null;
+        if (currentUser) {
+            userId = currentUser._id || currentUser.id || currentUser.userId || null;
+        }
         if (!userId) {
             const storedUser = localStorage.getItem('user');
             if (storedUser) {
-                const user = JSON.parse(storedUser);
-                userId = user._id || user.id || null;
-                if (!currentUser) currentUser = user;
+                try {
+                    const user = JSON.parse(storedUser);
+                    userId = user._id || user.id || user.userId || null;
+                    if (!currentUser) {
+                        currentUser = user;
+                    }
+                } catch (e) {}
             }
         }
         if (userId && typeof userId !== 'string') {
@@ -266,20 +273,37 @@ function initSocket() {
             }
         });
 
+        // ============================================================
+        // استقبال رسالة جديدة – مع تجاهل الرسائل من المستخدم نفسه
+        // ============================================================
         socket.on('new-message', (data) => {
             console.log('💬 رسالة جديدة:', data);
-            showToast(`💬 رسالة جديدة من ${data.senderName || 'مستخدم'}`, 'info');
+            
+            const currentUserId = currentUser?._id || currentUser?.id || '';
+            const senderId = data.senderId || data.sender?._id || '';
+            
+            // عرض الإشعار فقط إذا لم يكن المرسل هو المستخدم الحالي
+            if (senderId !== currentUserId) {
+                showToast(`💬 رسالة جديدة من ${data.senderName || 'مستخدم'}`, 'info');
+            }
+            
+            // تحديث الرسائل إذا كانت هذه المحادثة مفتوحة
             if (currentTradeId === data.tradeId) {
                 loadMessages(currentTradeId);
             }
         });
 
-        socket.on('trade-notification', (data) => {
-            console.log('🔔 إشعار تبادل:', data);
-            addNotification(data.title, data.message, 'trade', data.link || '/trades');
+        socket.on('trade-updated', (data) => {
+            showToast(`🔄 ${data.message}`, 'info');
             if (currentPage === 'trades') {
                 loadTrades();
             }
+            loadBooks();
+        });
+
+        socket.on('trade-notification', (data) => {
+            console.log('🔔 إشعار تبادل:', data);
+            addNotification(data.title, data.message, 'trade', data.link || '/trades');
         });
 
         socket.on('achievement-notification', (data) => {
