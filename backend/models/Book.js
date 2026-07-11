@@ -5,6 +5,7 @@ const BookSchema = new mongoose.Schema({
   title: { type: String, required: true, index: true },
   author: { type: String, required: true, index: true },
   description: { type: String, default: '' },
+  excerpt: { type: String, default: '' }
   category: {
     type: String,
     enum: ['رواية', 'علمي', 'ديني', 'تنمية بشرية', 'تاريخي', 'سياسي', 'أدب', 'شعر', 'فلسفة', 'أطفال', 'أخرى'],
