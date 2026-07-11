@@ -1499,14 +1499,15 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
         return;
     }
 
-    const title = document.getElementById('bookTitle').value.trim();
-    const author = document.getElementById('bookAuthor').value.trim();
-    const description = document.getElementById('bookDescription').value.trim();
-    const excerpt = document.getElementById('bookExcerpt').value.trim();
-    const category = document.getElementById('bookCategory').value;
-    const condition = document.getElementById('bookCondition').value;
-    const location = document.getElementById('bookLocation').value.trim();
-    const coverFile = document.getElementById('bookCover').files[0];
+    const title = document.getElementById('editTitle').value.trim();
+    const author = document.getElementById('editAuthor').value.trim();
+    const description = document.getElementById('editDescription').value.trim();
+    const category = document.getElementById('editCategory').value;
+    const condition = document.getElementById('editCondition').value;
+    const location = document.getElementById('editLocation').value.trim();
+    const tags = document.getElementById('editTags').value.trim();
+    const excerpt = document.getElementById('editExcerpt').value.trim(); // <-- هذا السطر مهم
+    const coverFile = document.getElementById('editCoverImage').files[0];
 
     if (!title || !author || !category || !condition) {
         showToast('❌ الرجاء ملء جميع الحقول المطلوبة', 'error');
