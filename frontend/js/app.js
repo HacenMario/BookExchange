@@ -585,67 +585,67 @@ async function showBookDetails(bookId) {
         if (!res.ok) {
             const errorText = await res.text();
             console.error('❌ فشل جلب الكتاب:', res.status, errorText);
-            throw new Error('فشل في جلب تفاصيل الكتاب');
+            showToast('❌ فشل في تحميل تفاصيل الكتاب', 'error');
+            return;
         }
         
         const book = await res.json();
         console.log('📦 بيانات الكتاب:', book);
 
+        // التأكد من وجود عناصر النافذة
         const modal = document.getElementById('bookDetailsModal');
         const content = document.getElementById('bookDetailsContent');
-
         if (!modal || !content) {
             console.error('❌ عناصر النافذة غير موجودة');
             showToast('❌ خطأ في عرض التفاصيل', 'error');
             return;
         }
 
-        // تنسيق التاريخ
-        const addedDate = book.createdAt ? new Date(book.createdAt).toLocaleDateString('ar-EG', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        }) : 'تاريخ غير معروف';
+        // ===== معالجة الوسوم (tags) بأمان =====
+        let tagsArray = [];
+        if (book.tags) {
+            if (Array.isArray(book.tags)) {
+                tagsArray = book.tags;
+            } else if (typeof book.tags === 'string') {
+                tagsArray = book.tags.split(',').map(t => t.trim()).filter(t => t);
+            }
+        }
+        const tagsHtml = tagsArray.length > 0
+            ? `<div style="display:flex;gap:0.3rem;flex-wrap:wrap;justify-content:center;margin-top:0.5rem;">
+                ${tagsArray.map(tag => `<span style="background:#eee;padding:0.1rem 0.6rem;border-radius:50px;font-size:0.7rem;color:#666;">#${tag}</span>`).join('')}
+               </div>`
+            : '';
 
-        const coverHtml = book.coverImage ?
-            `<img src="${book.coverImage}" alt="${book.title}" style="max-width:100%;max-height:250px;object-fit:contain;border-radius:8px;">` :
-            `<div style="font-size:5rem;color:var(--gold);opacity:0.5;text-align:center;">📖</div>`;
+        // ===== تنسيق التاريخ =====
+        const addedDate = book.createdAt
+            ? new Date(book.createdAt).toLocaleDateString('ar-EG', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })
+            : 'تاريخ غير معروف';
+
+        // ===== صورة الغلاف =====
+        const coverHtml = book.coverImage
+            ? `<img src="${book.coverImage}" alt="${book.title}" style="max-width:100%;max-height:250px;object-fit:contain;border-radius:8px;">`
+            : `<div style="font-size:5rem;color:var(--gold);opacity:0.5;text-align:center;">📖</div>`;
 
         const isAvailable = book.isAvailable !== false;
         const ownerName = book.owner?.name || 'مستخدم غير معروف';
         const ownerId = book.owner?._id || null;
         const isOwner = currentUser && ownerId === currentUser._id;
 
-        // ============================================================
-        // استخدام parseTags بدلاً من split المباشر
-        // ============================================================
-        const tagsArray = parseTags(book.tags);
-        const tagsHtml = tagsArray.length > 0 ? `
-            <div style="display:flex;gap:0.3rem;flex-wrap:wrap;justify-content:center;">
-                ${tagsArray.map(tag => 
-                    `<span style="background:#eee;padding:0.1rem 0.6rem;border-radius:50px;font-size:0.7rem;color:#666;">#${tag}</span>`
-                ).join('')}
-            </div>
-        ` : '';
+        // ===== مقتطف حسب التصنيف =====
+        const excerpts = {
+            'رواية': '"كانت القراءة هي النافذة الوحيدة التي تطلع منها على عالم لم تراه بعينيها..."',
+            'تنمية بشرية': '"التغيير الحقيقي لا يبدأ من الخارج، بل من الداخل..."',
+            'فلسفة': '"الحكمة الحقيقية ليست في معرفة الإجابات، بل في طرح الأسئلة الصحيحة."',
+            'تاريخي': '"التاريخ ليس مجرد ماضٍ نقرأه، بل هو مرآة تعكس حاضرنا ومستقبلنا."',
+            'شعر': '"والشعرُ كالماءِ لا يصفو ولا يَرِقُ إلّا إذا جاوَرَ الإحساسَ والشفقا"'
+        };
+        const excerpt = book.excerpt || excerpts[book.category] || '"الكتاب خير جليس في الزمان، وخير صاحب في الأوقات."';
 
-        // إنشاء مقتطف حسب التصنيف
-        let excerpt = book.excerpt || '';
-        if (!excerpt) {
-            if (book.category === 'رواية') {
-                excerpt = '"كانت القراءة هي النافذة الوحيدة التي تطلع منها على عالم لم تراه بعينيها، عالم يسكنه أناس لم تلتقِ بهم، وأفكار لم تخطر على بالها..."';
-            } else if (book.category === 'تنمية بشرية') {
-                excerpt = '"التغيير الحقيقي لا يبدأ من الخارج، بل من الداخل. حين تغير طريقة تفكيرك، تتغير حياتك كلها."';
-            } else if (book.category === 'فلسفة') {
-                excerpt = '"الحكمة الحقيقية ليست في معرفة الإجابات، بل في طرح الأسئلة الصحيحة."';
-            } else if (book.category === 'تاريخي') {
-                excerpt = '"التاريخ ليس مجرد ماضٍ نقرأه، بل هو مرآة تعكس حاضرنا ومستقبلنا."';
-            } else if (book.category === 'شعر') {
-                excerpt = '"والشعرُ كالماءِ لا يصفو ولا يَرِقُ إلّا إذا جاوَرَ الإحساسَ والشفقا"';
-            } else {
-                excerpt = '"الكتاب خير جليس في الزمان، وخير صاحب في الأوقات."';
-            }
-        }
-
+        // ===== بناء محتوى النافذة =====
         content.innerHTML = `
             <div style="display:flex;flex-direction:column;gap:1rem;">
                 <!-- صورة الغلاف -->
@@ -686,11 +686,14 @@ async function showBookDetails(bookId) {
                     </div>
                 `}
                 
-                <!-- مقتطف من الكتاب -->
+                <!-- مقتطف -->
                 <div style="background:#f0f4f8;padding:0.8rem;border-radius:10px;border-right:4px solid #3498db;">
                     <h4 style="color:var(--brown);margin:0 0 0.3rem 0;">📖 مقتطف من الكتاب:</h4>
-                    <p style="color:#555;margin:0;line-height:1.8;font-style:italic;">"${excerpt}"</p>
+                    <p style="color:#555;margin:0;line-height:1.8;font-style:italic;">${excerpt}</p>
                 </div>
+                
+                <!-- الوسوم -->
+                ${tagsHtml}
                 
                 <!-- أزرار الإجراءات -->
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;">
@@ -716,9 +719,6 @@ async function showBookDetails(bookId) {
                         <i class="fas fa-times"></i> إغلاق
                     </button>
                 </div>
-                
-                <!-- علامات التصنيف (Tags) باستخدام parseTags -->
-                ${tagsHtml}
             </div>
         `;
 
