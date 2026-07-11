@@ -1048,8 +1048,10 @@ async function editBook(bookId) {
                         <input type="text" id="editTags" value="${Array.isArray(book.tags) ? book.tags.join(',') : book.tags || ''}">
                     </div>
                     <div class="form-group">
-                        <label>رابط صورة الغلاف (اختياري)</label>
-                        <input type="text" id="editCoverImage" value="${book.coverImage || ''}">
+                        <label>صورة الغلاف (اختياري)</label>
+                        <input type="file" id="editCoverImage" accept="image/*">
+                        ${book.coverImage ? `<div style="margin-top:0.3rem;"><img src="${book.coverImage}" style="max-width:100px;max-height:100px;border-radius:8px;border:1px solid #ddd;"></div>` : ''}
+                        <div style="font-size:0.7rem;color:#888;margin-top:0.2rem;">اتركه فارغاً للاحتفاظ بالصورة الحالية</div>
                     </div>
                     <div style="display:flex;gap:0.5rem;margin-top:1rem;">
                         <button type="submit" class="btn-gold" style="flex:1;padding:0.5rem;">
