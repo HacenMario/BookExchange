@@ -1592,17 +1592,19 @@ async function sendMessage() {
     }
 
     try {
-        const res = await fetch(`${API_BASE}/messages`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                tradeId: currentTradeId,
-                content: content
-            })
-        });
+
+const res = await fetch(`${API_BASE}/messages`, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({
+        tradeId: currentTradeId,
+        content: content,
+        senderName: currentUser?.name || 'مستخدم'  // <-- أضف هذا السطر
+    })
+});
 
         const data = await res.json();
 
@@ -2285,21 +2287,34 @@ function updateNotificationUI() {
         return;
     }
 
-    list.innerHTML = notifs.slice(0, 10).map(n => `
-        <div class="notif-item" style="padding:0.5rem 0.8rem;border-bottom:1px solid #f5f0eb;${n.read ? '' : 'background:#fef9f0;border-right:3px solid #c9a050;'}">
-            <div style="display:flex;justify-content:space-between;align-items:start;">
-                <div style="flex:1;">
-                    <div style="font-weight:600;font-size:0.9rem;color:#2c1810;">${n.title}</div>
-                    <div style="font-size:0.8rem;color:#666;">${n.message}</div>
-                    <div style="font-size:0.65rem;color:#999;margin-top:0.2rem;">${formatDate(n.timestamp)}</div>
+    list.innerHTML = notifs.slice(0, 10).map(n => {
+        // ============================================================
+        // معالجة رابط الإشعار بحيث يعمل مع SPA
+        // ============================================================
+        let linkHtml = '';
+        if (n.link) {
+            if (n.link === '/trades' || n.link.includes('trades')) {
+                linkHtml = `<span style="font-size:0.75rem;color:#c9a050;cursor:pointer;text-decoration:none;" onclick="event.stopPropagation();navigateTo('trades');">عرض التفاصيل →</span>`;
+            } else {
+                linkHtml = `<a href="${n.link}" style="font-size:0.75rem;color:#c9a050;text-decoration:none;" onclick="event.stopPropagation();">عرض التفاصيل →</a>`;
+            }
+        }
+        
+        return `
+            <div class="notif-item" style="padding:0.5rem 0.8rem;border-bottom:1px solid #f5f0eb;${n.read ? '' : 'background:#fef9f0;border-right:3px solid #c9a050;'}">
+                <div style="display:flex;justify-content:space-between;align-items:start;">
+                    <div style="flex:1;">
+                        <div style="font-weight:600;font-size:0.9rem;color:#2c1810;">${n.title}</div>
+                        <div style="font-size:0.8rem;color:#666;">${n.message}</div>
+                        <div style="font-size:0.65rem;color:#999;margin-top:0.2rem;">${formatDate(n.timestamp)}</div>
+                    </div>
+                    ${!n.read ? `<span style="background:#c9a050;border-radius:50%;width:8px;height:8px;display:inline-block;flex-shrink:0;margin-top:0.3rem;"></span>` : ''}
                 </div>
-                ${!n.read ? `<span style="background:#c9a050;border-radius:50%;width:8px;height:8px;display:inline-block;flex-shrink:0;margin-top:0.3rem;"></span>` : ''}
+                ${linkHtml}
             </div>
-            ${n.link ? `<a href="${n.link}" style="font-size:0.75rem;color:#c9a050;text-decoration:none;" onclick="event.stopPropagation();">عرض التفاصيل →</a>` : ''}
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
-
 // ============================================================
 // قائمة الإشعارات المنبثقة
 // ============================================================
