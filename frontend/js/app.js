@@ -2228,10 +2228,8 @@ function addNotification(title, message, type = 'info', link = null) {
     if (notifs.length > 50) notifs.pop();
     saveNotifications(notifs);
     updateNotificationUI();
-    const icon = type === 'trade' ? '🔄' : type === 'achievement' ? '🏆' : '📬';
-    showToast(`${icon} ${title}`, 'info');
+    showToast(`🔔 ${title}`, 'info');
 }
-
 function updateNotificationUI() {
     const notifs = loadNotifications();
     const unreadCount = notifs.filter(n => !n.read).length;
