@@ -1459,6 +1459,7 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
     const title = document.getElementById('bookTitle').value.trim();
     const author = document.getElementById('bookAuthor').value.trim();
     const description = document.getElementById('bookDescription').value.trim();
+    const excerpt = document.getElementById('bookExcerpt').value.trim();
     const category = document.getElementById('bookCategory').value;
     const condition = document.getElementById('bookCondition').value;
     const location = document.getElementById('bookLocation').value.trim();
