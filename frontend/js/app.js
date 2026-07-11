@@ -1546,7 +1546,6 @@ function renderMessages(messages) {
 async function sendMessage() {
     const input = document.getElementById('chatInput');
     if (!input) {
-        console.error('❌ حقل الإدخال غير موجود');
         showToast('❌ خطأ في الدردشة', 'error');
         return;
     }
@@ -1584,9 +1583,7 @@ async function sendMessage() {
         const data = await res.json();
 
         if (res.ok) {
-            // تفريغ حقل الإدخال
             input.value = '';
-            // إعادة تحميل الرسائل
             await loadMessages(currentTradeId);
         } else {
             showToast(`❌ ${data.message || 'فشل الإرسال'}`, 'error');
@@ -2384,9 +2381,18 @@ async function init() {
         if (!el.value) el.setAttribute('min', today);
     });
 
+    // ============================================================
+    // مستمع للضغط على Enter في حقل الدردشة
+    // ============================================================
+    document.getElementById('chatInput')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
     console.log('📚 منصة تبادل الكتب – النسخة الاحترافية');
     console.log('✅ API يعمل على:', API_BASE);
     console.log('👤 المستخدم:', currentUser?.name || 'غير مسجل');
 }
-
 document.addEventListener('DOMContentLoaded', init);
