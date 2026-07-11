@@ -18,6 +18,18 @@ function formatDate(dateString) {
 }
 
 // ============================================================
+// دالة مساعدة لمعالجة الوسوم (tags) - تدعم المصفوفة والنص
+// ============================================================
+function parseTags(tags) {
+    if (!tags) return [];
+    if (Array.isArray(tags)) return tags;
+    if (typeof tags === 'string') {
+        return tags.split(',').map(t => t.trim()).filter(t => t);
+    }
+    return [];
+}
+
+// ============================================================
 // عرض شرح طريقة حساب النقاط
 // ============================================================
 function getPointsExplanation() {
@@ -563,10 +575,7 @@ document.getElementById('filterCategory').addEventListener('change', applyFilter
 document.getElementById('filterCity').addEventListener('change', applyFilters);
 
 // ============================================================
-// تفاصيل الكتاب
-// ============================================================
-// ============================================================
-// عرض تفاصيل الكتاب في نافذة منبثقة
+// تفاصيل الكتاب (معدل لاستخدام parseTags)
 // ============================================================
 async function showBookDetails(bookId) {
     try {
@@ -606,6 +615,18 @@ async function showBookDetails(bookId) {
         const ownerName = book.owner?.name || 'مستخدم غير معروف';
         const ownerId = book.owner?._id || null;
         const isOwner = currentUser && ownerId === currentUser._id;
+
+        // ============================================================
+        // استخدام parseTags بدلاً من split المباشر
+        // ============================================================
+        const tagsArray = parseTags(book.tags);
+        const tagsHtml = tagsArray.length > 0 ? `
+            <div style="display:flex;gap:0.3rem;flex-wrap:wrap;justify-content:center;">
+                ${tagsArray.map(tag => 
+                    `<span style="background:#eee;padding:0.1rem 0.6rem;border-radius:50px;font-size:0.7rem;color:#666;">#${tag}</span>`
+                ).join('')}
+            </div>
+        ` : '';
 
         // إنشاء مقتطف حسب التصنيف
         let excerpt = book.excerpt || '';
@@ -696,14 +717,8 @@ async function showBookDetails(bookId) {
                     </button>
                 </div>
                 
-                <!-- علامات التصنيف (Tags) -->
-                ${book.tags ? `
-                    <div style="display:flex;gap:0.3rem;flex-wrap:wrap;justify-content:center;">
-                        ${book.tags.split(',').map(tag => 
-                            `<span style="background:#eee;padding:0.1rem 0.6rem;border-radius:50px;font-size:0.7rem;color:#666;">#${tag.trim()}</span>`
-                        ).join('')}
-                    </div>
-                ` : ''}
+                <!-- علامات التصنيف (Tags) باستخدام parseTags -->
+                ${tagsHtml}
             </div>
         `;
 
