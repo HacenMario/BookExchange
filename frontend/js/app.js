@@ -244,23 +244,13 @@ function logout() {
 function initSocket() {
     if (socket) return;
     try {
-        let userId = null;
-        if (currentUser) {
-            userId = currentUser._id || currentUser.id || currentUser.userId || null;
-        }
+        let userId = currentUser?._id || currentUser?.id || null;
         if (!userId) {
             const storedUser = localStorage.getItem('user');
             if (storedUser) {
-                try {
-                    const user = JSON.parse(storedUser);
-                    userId = user._id || user.id || user.userId || null;
-                    if (!currentUser) {
-                        currentUser = user;
-                        console.log('🔄 تم استعادة المستخدم من localStorage:', currentUser);
-                    }
-                } catch (e) {
-                    console.warn('⚠️ فشل parse user من localStorage', e);
-                }
+                const user = JSON.parse(storedUser);
+                userId = user._id || user.id || null;
+                if (!currentUser) currentUser = user;
             }
         }
         if (userId && typeof userId !== 'string') {
@@ -273,30 +263,23 @@ function initSocket() {
             if (userId) {
                 socket.emit('user-online', userId);
                 console.log(`👤 تم إرسال معرف المستخدم: ${userId}`);
-            } else {
-                console.warn('⚠️ لا يوجد معرف مستخدم للإرسال');
             }
         });
 
         socket.on('new-message', (data) => {
             console.log('💬 رسالة جديدة:', data);
             showToast(`💬 رسالة جديدة من ${data.senderName || 'مستخدم'}`, 'info');
-            if (currentPage === 'trades') {
-                loadTrades();
+            if (currentTradeId === data.tradeId) {
+                loadMessages(currentTradeId);
             }
-        });
-
-        socket.on('trade-updated', (data) => {
-            showToast(`🔄 ${data.message}`, 'info');
-            if (currentPage === 'trades') {
-                loadTrades();
-            }
-            loadBooks();
         });
 
         socket.on('trade-notification', (data) => {
             console.log('🔔 إشعار تبادل:', data);
             addNotification(data.title, data.message, 'trade', data.link || '/trades');
+            if (currentPage === 'trades') {
+                loadTrades();
+            }
         });
 
         socket.on('achievement-notification', (data) => {
