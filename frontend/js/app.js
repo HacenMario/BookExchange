@@ -2269,6 +2269,7 @@ function updateNotificationUI() {
     const notifs = loadNotifications();
     const unreadCount = notifs.filter(n => !n.read).length;
     
+    console.log('🔔 عدد الإشعارات غير المقروءة:', unreadCount); // <-- أضف هذا
     const badge = document.getElementById('notifBadge');
     if (badge) {
         if (unreadCount > 0) {
