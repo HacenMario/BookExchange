@@ -278,16 +278,18 @@
 
     <!-- 8. نافذة الدردشة -->
     <div class="modal-overlay" id="chatModal">
-        <div class="modal-box" style="max-width:600px;">
-            <button class="modal-close" onclick="closeModal('chatModal')">&times;</button>
-            <h2><i class="fas fa-comment-dots"></i> 💬 الدردشة</h2>
-            <div id="chatMessages" style="max-height:350px;overflow-y:auto;background:#f9f6f2;border-radius:10px;padding:0.8rem;margin-bottom:0.8rem;"></div>
-            <div style="display:flex;gap:0.5rem;">
-                <input type="text" id="chatInput" placeholder="اكتب رسالتك..." style="flex:1;padding:0.5rem 0.8rem;border-radius:50px;border:1px solid #ddd;background:#fff;" />
-                <button class="btn-gold" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
-            </div>
+    <div class="modal-box" style="max-width:600px;">
+        <button class="modal-close" onclick="closeModal('chatModal')">&times;</button>
+        <h2><i class="fas fa-comment-dots"></i> 💬 الدردشة</h2>
+        <div id="chatMessages" style="max-height:350px;overflow-y:auto;background:#f9f6f2;border-radius:10px;padding:0.8rem;margin-bottom:0.8rem;"></div>
+        <div style="display:flex;gap:0.5rem;">
+            <input type="text" id="chatInput" placeholder="اكتب رسالتك..." style="flex:1;padding:0.5rem 0.8rem;border-radius:50px;border:1px solid #ddd;background:#fff;" />
+            <button class="btn-gold" onclick="sendMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
         </div>
     </div>
+</div>
 
     <!-- ============================================================ -->
     <!-- الصفحات (Sections)                                           -->
