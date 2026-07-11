@@ -113,18 +113,25 @@ router.put('/:id', auth, async (req, res) => {
     const book = await Book.findById(req.params.id);
     if (!book) return res.status(404).json({ message: '❌ غير موجود' });
     if (book.owner.toString() !== req.userId) return res.status(403).json({ message: '❌ غير مصرح' });
-    const { title, author, description, category, subCategory, tags, condition, coverImage, location, isAvailable } = req.body;
-    if (title) book.title = title;
-    if (author) book.author = author;
-    if (description !== undefined) book.description = description;
-    if (category) book.category = category;
-    if (subCategory !== undefined) book.subCategory = subCategory;
-    if (tags !== undefined) book.tags = tags ? tags.split(',').map(t => t.trim()) : [];
-    if (condition) book.condition = condition;
-    if (coverImage !== undefined) book.coverImage = coverImage;
-    if (location !== undefined) book.location = location;
-    if (isAvailable !== undefined) book.isAvailable = isAvailable;
-    await book.save();
+const { 
+    title, author, description, category, subCategory, 
+    tags, condition, coverImage, location, isAvailable,
+    excerpt  // <-- هذا هو السطر الجديد
+} = req.body;
+
+if (title) book.title = title;
+if (author) book.author = author;
+if (description !== undefined) book.description = description;
+if (category) book.category = category;
+if (subCategory !== undefined) book.subCategory = subCategory;
+if (tags !== undefined) book.tags = tags ? tags.split(',').map(t => t.trim()) : [];
+if (condition) book.condition = condition;
+if (coverImage !== undefined) book.coverImage = coverImage;
+if (location !== undefined) book.location = location;
+if (isAvailable !== undefined) book.isAvailable = isAvailable;
+if (excerpt !== undefined) book.excerpt = excerpt;  // <-- هذا السطر الجديد
+
+await book.save();
     res.json({ message: '✅ تم التحديث', book });
   } catch (error) {
     res.status(500).json({ message: error.message });
