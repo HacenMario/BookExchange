@@ -1545,9 +1545,20 @@ function renderMessages(messages) {
 // ============================================================
 async function sendMessage() {
     const input = document.getElementById('chatInput');
-    const content = input?.value.trim();
-    if (!content || !currentTradeId) {
+    if (!input) {
+        console.error('❌ حقل الإدخال غير موجود');
+        showToast('❌ خطأ في الدردشة', 'error');
+        return;
+    }
+
+    const content = input.value.trim();
+    if (!content) {
         showToast('❌ اكتب رسالة أولاً', 'error');
+        return;
+    }
+
+    if (!currentTradeId) {
+        showToast('❌ لا توجد محادثة نشطة', 'error');
         return;
     }
 
@@ -1570,20 +1581,19 @@ async function sendMessage() {
             })
         });
 
-        if (!res.ok) {
-            const data = await res.json();
-            showToast(`❌ ${data.message || 'فشل الإرسال'}`, 'error');
-            return;
-        }
+        const data = await res.json();
 
-        // تفريغ حقل الإدخال
-        input.value = '';
-        
-        // إعادة تحميل الرسائل
-        await loadMessages(currentTradeId);
+        if (res.ok) {
+            // تفريغ حقل الإدخال
+            input.value = '';
+            // إعادة تحميل الرسائل
+            await loadMessages(currentTradeId);
+        } else {
+            showToast(`❌ ${data.message || 'فشل الإرسال'}`, 'error');
+        }
     } catch (err) {
         console.error('❌ فشل الإرسال:', err);
-        showToast('❌ فشل الاتصال', 'error');
+        showToast('❌ فشل الاتصال بالخادم', 'error');
     }
 }
 // ============================================================
