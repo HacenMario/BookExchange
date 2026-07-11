@@ -1002,6 +1002,16 @@ async function editBook(bookId) {
         if (!res.ok) throw new Error('فشل في جلب بيانات الكتاب');
         const book = await res.json();
 
+        // معالجة الوسوم
+        let tagsValue = '';
+        if (book.tags) {
+            if (Array.isArray(book.tags)) {
+                tagsValue = book.tags.join(',');
+            } else if (typeof book.tags === 'string') {
+                tagsValue = book.tags;
+            }
+        }
+
         // إنشاء نافذة التعديل
         const modal = document.createElement('div');
         modal.className = 'modal-overlay active';
@@ -1045,7 +1055,11 @@ async function editBook(bookId) {
                     </div>
                     <div class="form-group">
                         <label>الوسوم (مفصولة بفواصل)</label>
-                        <input type="text" id="editTags" value="${Array.isArray(book.tags) ? book.tags.join(',') : book.tags || ''}">
+                        <input type="text" id="editTags" value="${tagsValue}">
+                    </div>
+                    <div class="form-group">
+                        <label>مقتطف من الكتاب (اختياري)</label>
+                        <textarea id="editExcerpt" rows="2">${book.excerpt || ''}</textarea>
                     </div>
                     <div class="form-group">
                         <label>صورة الغلاف (اختياري)</label>
@@ -1068,71 +1082,71 @@ async function editBook(bookId) {
 
         // معالجة تقديم النموذج
         document.getElementById('editBookForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const title = document.getElementById('editTitle').value.trim();
-    const author = document.getElementById('editAuthor').value.trim();
-    const description = document.getElementById('editDescription').value.trim();
-    const category = document.getElementById('editCategory').value;
-    const condition = document.getElementById('editCondition').value;
-    const location = document.getElementById('editLocation').value.trim();
-    const tags = document.getElementById('editTags').value.trim();
-    const coverFile = document.getElementById('editCoverImage').files[0];
-    const excerpt = document.getElementById('editExcerpt')?.value.trim() || '';
+            e.preventDefault();
+            
+            const title = document.getElementById('editTitle').value.trim();
+            const author = document.getElementById('editAuthor').value.trim();
+            const description = document.getElementById('editDescription').value.trim();
+            const category = document.getElementById('editCategory').value;
+            const condition = document.getElementById('editCondition').value;
+            const location = document.getElementById('editLocation').value.trim();
+            const tags = document.getElementById('editTags').value.trim();
+            const excerpt = document.getElementById('editExcerpt').value.trim();
+            const coverFile = document.getElementById('editCoverImage').files[0];
 
-    // جلب الصورة القديمة إذا لم يتم رفع صورة جديدة
-    let coverImage = book.coverImage || '';
-    if (coverFile) {
-        try {
-            const reader = new FileReader();
-            coverImage = await new Promise(resolve => {
-                reader.onload = e => resolve(e.target.result);
-                reader.readAsDataURL(coverFile);
-            });
-        } catch (error) {
-            showToast('❌ فشل في قراءة الصورة', 'error');
-            return;
-        }
-    }
+            // الحفاظ على الصورة القديمة إذا لم يتم رفع صورة جديدة
+            let coverImage = book.coverImage || '';
+            if (coverFile) {
+                try {
+                    const reader = new FileReader();
+                    coverImage = await new Promise(resolve => {
+                        reader.onload = e => resolve(e.target.result);
+                        reader.readAsDataURL(coverFile);
+                    });
+                } catch (error) {
+                    showToast('❌ فشل في قراءة الصورة', 'error');
+                    return;
+                }
+            }
 
-    if (!title || !author) {
-        showToast('❌ العنوان والمؤلف مطلوبان', 'error');
-        return;
-    }
+            if (!title || !author) {
+                showToast('❌ العنوان والمؤلف مطلوبان', 'error');
+                return;
+            }
 
-    try {
-        const updateRes = await fetch(`${API_BASE}/books/${bookId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                title,
-                author,
-                description,
-                category,
-                condition,
-                location,
-                tags,
-                coverImage,
-                excerpt
-            })
+            try {
+                const updateRes = await fetch(`${API_BASE}/books/${bookId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        title,
+                        author,
+                        description,
+                        category,
+                        condition,
+                        location,
+                        tags,
+                        coverImage,
+                        excerpt
+                    })
+                });
+                const result = await updateRes.json();
+                if (updateRes.ok) {
+                    showToast('✅ تم تحديث الكتاب بنجاح', 'success');
+                    closeModal('editBookModal');
+                    loadBooks();
+                    if (currentPage === 'my-books') loadMyBooks();
+                } else {
+                    showToast(`❌ ${result.message}`, 'error');
+                }
+            } catch (err) {
+                showToast('❌ فشل الاتصال', 'error');
+                console.error(err);
+            }
         });
-        const result = await updateRes.json();
-        if (updateRes.ok) {
-            showToast('✅ تم تحديث الكتاب بنجاح', 'success');
-            closeModal('editBookModal');
-            loadBooks();
-            if (currentPage === 'my-books') loadMyBooks();
-        } else {
-            showToast(`❌ ${result.message}`, 'error');
-        }
-    } catch (err) {
-        showToast('❌ فشل الاتصال', 'error');
-        console.error(err);
-    }
-});
 
     } catch (error) {
         console.error('خطأ في تحميل بيانات الكتاب:', error);
