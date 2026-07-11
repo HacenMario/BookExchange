@@ -1486,7 +1486,122 @@ async function reviewTrade(id) {
 }
 
 function openChat(tradeId) {
-    showToast(`💬 سيتم فتح الدردشة للطلب ${tradeId}`, 'info');
+    if (!currentUser) {
+        showToast('❌ يرجى تسجيل الدخول أولاً', 'error');
+        return;
+    }
+    
+    // حفظ معرف الطلب الحالي
+    currentTradeId = tradeId;
+    
+    // الانضمام إلى غرفة المحادثة الخاصة بالطلب
+    if (socket) {
+        socket.emit('join-trade-room', tradeId);
+    }
+    
+    // تحميل الرسائل
+    loadMessages(tradeId);
+    
+    // فتح نافذة الدردشة
+    openModal('chatModal');
+}
+
+// ============================================================
+// تحميل رسائل المحادثة
+// ============================================================
+async function loadMessages(tradeId) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        showToast('❌ يرجى تسجيل الدخول', 'error');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/messages/${tradeId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('فشل في تحميل الرسائل');
+        const messages = await res.json();
+        renderMessages(messages);
+    } catch (err) {
+        console.error('❌ فشل تحميل الرسائل:', err);
+        showToast('❌ فشل في تحميل الرسائل', 'error');
+    }
+}
+
+// ============================================================
+// عرض الرسائل في نافذة الدردشة
+// ============================================================
+function renderMessages(messages) {
+    const container = document.getElementById('chatMessages');
+    if (!container) return;
+
+    if (!messages || messages.length === 0) {
+        container.innerHTML = '<p style="color:#888;text-align:center;padding:1rem;">💬 لا توجد رسائل بعد، ابدأ المحادثة!</p>';
+        return;
+    }
+
+    const userId = currentUser?._id || currentUser?.id || '';
+    container.innerHTML = messages.map(msg => {
+        const isSent = msg.sender?._id === userId || msg.sender === userId;
+        return `
+            <div class="message ${isSent ? 'sent' : 'received'}">
+                <strong>${msg.sender?.name || 'مستخدم'}</strong>
+                <p>${msg.content}</p>
+                <small>${formatDate(msg.createdAt)}</small>
+            </div>
+        `;
+    }).join('');
+
+    // التمرير إلى أسفل النافذة
+    container.scrollTop = container.scrollHeight;
+}
+
+// ============================================================
+// إرسال رسالة
+// ============================================================
+async function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const content = input?.value.trim();
+    if (!content || !currentTradeId) {
+        showToast('❌ اكتب رسالة أولاً', 'error');
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+        showToast('❌ يرجى تسجيل الدخول', 'error');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/messages`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                tradeId: currentTradeId,
+                content: content
+            })
+        });
+
+        if (!res.ok) {
+            const data = await res.json();
+            showToast(`❌ ${data.message || 'فشل الإرسال'}`, 'error');
+            return;
+        }
+
+        // تفريغ حقل الإدخال
+        input.value = '';
+        
+        // إعادة تحميل الرسائل
+        await loadMessages(currentTradeId);
+    } catch (err) {
+        console.error('❌ فشل الإرسال:', err);
+        showToast('❌ فشل الاتصال', 'error');
+    }
 }
 // ============================================================
 // إضافة كتاب
