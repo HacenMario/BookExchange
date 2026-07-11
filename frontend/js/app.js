@@ -1493,7 +1493,7 @@ document.getElementById('addBookForm').addEventListener('submit', async (e) => {
             },
             body: JSON.stringify({
                 title, author, description, category, condition,
-                coverImage, location: location || ''
+                coverImage, location: location || '',
                 excerpt: excerpt || ''
             })
         });
