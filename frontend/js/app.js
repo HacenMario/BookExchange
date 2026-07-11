@@ -1063,7 +1063,8 @@ async function editBook(bookId) {
                     </div>
                     <div class="form-group">
                         <label>صورة الغلاف (اختياري)</label>
-                        <input type="file" id="editCoverImage" accept="image/*">${book.coverImage ? `<div style="margin-top:0.3rem;"><img src="${book.coverImage}" style="max-width:100px;max-height:100px;border-radius:8px;border:1px solid #ddd;"></div>` : ''}
+                        <input type="file" id="editCoverImage" accept="image/*">
+                        ${book.coverImage ? `<div style="margin-top:0.3rem;"><img src="${book.coverImage}" style="max-width:100px;max-height:100px;border-radius:8px;border:1px solid #ddd;"></div>` : ''}
                         <div style="font-size:0.7rem;color:#888;margin-top:0.2rem;">اتركه فارغاً للاحتفاظ بالصورة الحالية</div>
                     </div>
                     <div style="display:flex;gap:0.5rem;margin-top:1rem;">
