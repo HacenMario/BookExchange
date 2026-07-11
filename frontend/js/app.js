@@ -987,11 +987,130 @@ async function toggleAvailability(bookId) {
     }
 }
 
-function editBook(bookId) {
-    // يمكنك فتح نافذة تعديل أو توجيه المستخدم إلى صفحة التعديل
-    showToast('📝 جاري فتح نافذة التعديل...', 'info');
-    // يمكنك هنا فتح نافذة منبثقة للتعديل
-    // أو الانتقال إلى صفحة التعديل
+async function editBook(bookId) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        showToast('❌ يرجى تسجيل الدخول أولاً', 'error');
+        return;
+    }
+
+    try {
+        // جلب بيانات الكتاب الحالية
+        const res = await fetch(`${API_BASE}/books/${bookId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('فشل في جلب بيانات الكتاب');
+        const book = await res.json();
+
+        // إنشاء نافذة التعديل
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay active';
+        modal.id = 'editBookModal';
+        modal.innerHTML = `
+            <div class="modal-box" style="max-width:600px;">
+                <button class="modal-close" onclick="closeModal('editBookModal')">&times;</button>
+                <h2><i class="fas fa-edit"></i> تعديل الكتاب</h2>
+                <form id="editBookForm">
+                    <div class="form-group">
+                        <label>العنوان *</label>
+                        <input type="text" id="editTitle" value="${book.title}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>المؤلف *</label>
+                        <input type="text" id="editAuthor" value="${book.author}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>الوصف</label>
+                        <textarea id="editDescription" rows="3">${book.description || ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>التصنيف *</label>
+                        <select id="editCategory" required>
+                            ${['رواية', 'علمي', 'ديني', 'تنمية بشرية', 'تاريخي', 'سياسي', 'أدب', 'شعر', 'فلسفة', 'أطفال', 'أخرى'].map(cat =>
+                                `<option value="${cat}" ${book.category === cat ? 'selected' : ''}>${cat}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>حالة الكتاب *</label>
+                        <select id="editCondition" required>
+                            ${['جديد', 'ممتاز', 'جيد جداً', 'جيد', 'مقبول'].map(cond =>
+                                `<option value="${cond}" ${book.condition === cond ? 'selected' : ''}>${cond}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>الموقع</label>
+                        <input type="text" id="editLocation" value="${book.location || ''}">
+                    </div>
+                    <div class="form-group">
+                        <label>الوسوم (مفصولة بفواصل)</label>
+                        <input type="text" id="editTags" value="${Array.isArray(book.tags) ? book.tags.join(',') : book.tags || ''}">
+                    </div>
+                    <div class="form-group">
+                        <label>رابط صورة الغلاف (اختياري)</label>
+                        <input type="text" id="editCoverImage" value="${book.coverImage || ''}">
+                    </div>
+                    <div style="display:flex;gap:0.5rem;margin-top:1rem;">
+                        <button type="submit" class="btn-gold" style="flex:1;padding:0.5rem;">
+                            <i class="fas fa-save"></i> حفظ التغييرات
+                        </button>
+                        <button type="button" class="btn-outline" onclick="closeModal('editBookModal')" style="flex:1;padding:0.5rem;">
+                            إلغاء
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // معالجة تقديم النموذج
+        document.getElementById('editBookForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const updatedData = {
+                title: document.getElementById('editTitle').value.trim(),
+                author: document.getElementById('editAuthor').value.trim(),
+                description: document.getElementById('editDescription').value.trim(),
+                category: document.getElementById('editCategory').value,
+                condition: document.getElementById('editCondition').value,
+                location: document.getElementById('editLocation').value.trim(),
+                tags: document.getElementById('editTags').value.trim(),
+                coverImage: document.getElementById('editCoverImage').value.trim()
+            };
+
+            if (!updatedData.title || !updatedData.author) {
+                showToast('❌ العنوان والمؤلف مطلوبان', 'error');
+                return;
+            }
+
+            try {
+                const updateRes = await fetch(`${API_BASE}/books/${bookId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(updatedData)
+                });
+                const result = await updateRes.json();
+                if (updateRes.ok) {
+                    showToast('✅ تم تحديث الكتاب بنجاح', 'success');
+                    closeModal('editBookModal');
+                    loadBooks();
+                    if (currentPage === 'my-books') loadMyBooks();
+                } else {
+                    showToast(`❌ ${result.message}`, 'error');
+                }
+            } catch (err) {
+                showToast('❌ فشل الاتصال', 'error');
+                console.error(err);
+            }
+        });
+
+    } catch (error) {
+        console.error('خطأ في تحميل بيانات الكتاب:', error);
+        showToast('❌ فشل في تحميل بيانات الكتاب', 'error');
+    }
 }
 // ============================================================
 // طلبات التبادل
