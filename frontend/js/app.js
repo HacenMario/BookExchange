@@ -84,8 +84,8 @@ document.addEventListener('click', function(e) {
 // ============================================================
 // الإعدادات الأساسية
 // ============================================================
-const API_BASE = 'https://bookexchange-118x.onrender.com/api';
-const SOCKET_URL = 'https://bookexchange-118x.onrender.com';
+const API_BASE = 'https://bookexchange-iz9f.onrender.com/api';
+const SOCKET_URL = 'https://bookexchange-iz9f.onrender.com';
 let currentUser = null;
 let allBooks = [];
 let socket = null;
